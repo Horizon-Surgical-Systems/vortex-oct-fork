@@ -1,0 +1,28 @@
+# Visual Studio
+/.vs
+/CMakeSettings.json
+
+# Visual Studio Code
+/.vscode
+
+# CMake
+/build*/
+/CMakeUserPresets.json
+
+# Python
+__pycache__/
+*.egg-info/
+.pytest_cache/
+/dist
+/VERSION
+
+# emacs autosave
+*~
+\#*\#
+.\#*
+
+# data files
+*.bin
+*.npz
+*.npy
+*.png

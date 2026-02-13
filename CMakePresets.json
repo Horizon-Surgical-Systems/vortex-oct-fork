@@ -1,0 +1,191 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base-x64",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}"
+            },
+            "hidden": true
+        },
+        {
+            "name": "base-clang-win-x64",
+            "inherits": "base-x64",
+            "generator": "Ninja",
+            "environment": {
+                "CC": "clang-cl",
+                "CXX": "clang-cl",
+                "CXXFLAGS": "-m64 -fdiagnostics-absolute-paths -fcolor-diagnostics -Wno-unused-command-line-argument /Zi",
+                "CUDAFLAGS": "--expt-relaxed-constexpr -lineinfo -Xcudafe --diag_suppress=base_class_has_different_dll_interface -diag-suppress 27 -Wno-deprecated-gpu-targets -Xcompiler=/wd4984 --debug",
+                "LDFLAGS": "/debug"
+            },
+            "cacheVariables": {
+                "CMAKE_CUDA_STANDARD": "17"
+            },
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Windows"
+                    ],
+                    "intelliSenseMode": "windows-clang-x64"
+                }
+            },
+            "hidden": true
+        },
+        {
+            "name": "clang-win-x64-debug",
+            "inherits": "base-clang-win-x64",
+            "displayName": "Clang x64 Windows Debug",
+            "description": "Build without optimization, with debug information, and with debugging features.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_EXCEPTION_GUARDS": false,
+                "ENABLE_CUDA_KERNEL_SERIALIZATION": true
+            }
+        },
+        {
+            "name": "clang-win-x64-release",
+            "inherits": "base-clang-win-x64",
+            "displayName": "Clang x64 Windows Release",
+            "description": "Build with all optimizations but include debug information.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang-win-x64-unopt",
+            "inherits": "base-clang-win-x64",
+            "displayName": "Clang x64 Windows Unoptimized",
+            "description": "Build in release mode but with all optimizations disabled for debugging with Python.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_EXCEPTION_GUARDS": false,
+                "ENABLE_CUDA_KERNEL_SERIALIZATION": true,
+                "ENABLE_PYBIND11_OPTIMIZATIONS": false,
+                "CMAKE_CXX_FLAGS_RELEASE": "/Od /DNDEBUG"
+            }
+        },
+        {
+            "name": "base-linux-x64",
+            "inherits": "base-x64",
+            "vendor": {
+                "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                    "hostOS": [
+                        "Linux"
+                    ]
+                }
+            },
+            "hidden": true
+        },
+        {
+            "name": "base-clang-linux-x64",
+            "inherits": "base-linux-x64",
+            "environment": {
+                "CC": "clang",
+                "CXX": "clang++",
+                "CXXFLAGS": "-m64 -fdiagnostics-absolute-paths -fcolor-diagnostics --debug",
+                "CUDACXX": "clang++",
+                "CUDAHOSTCXX": "clang++",
+                "CUDAFLAGS": "-m64 -fdiagnostics-absolute-paths -fcolor-diagnostics --debug -Xclang -fcuda-allow-variadic-functions -DFMT_USE_FLOAT128=0 -D__STRICT_ANSI__",
+                "LDFLAGS": "-Wl,--exclude-libs=ALL"
+            },
+            "cacheVariables": {
+                "CMAKE_CUDA_STANDARD": "17"
+            },
+            "hidden": true
+        },
+        {
+            "name": "clang-linux-x64-debug",
+            "inherits": "base-clang-linux-x64",
+            "displayName": "Clang x64 Linux Debug",
+            "description": "Build without optimization, with debug information, and with debugging features.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_EXCEPTION_GUARDS": false,
+                "ENABLE_CUDA_KERNEL_SERIALIZATION": true
+            }
+        },
+        {
+            "name": "clang-linux-x64-unopt",
+            "inherits": "base-clang-linux-x64",
+            "displayName": "Clang x64 Linux Unoptimized",
+            "description": "Build without optimization, with debug information, and with debugging features.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_EXCEPTION_GUARDS": false,
+                "ENABLE_CUDA_KERNEL_SERIALIZATION": true,
+                "ENABLE_PYBIND11_OPTIMIZATIONS": false,
+                "CMAKE_CXX_FLAGS_RELEASE": "-O0"
+            }
+        },
+        {
+            "name": "clang-linux-x64-release",
+            "inherits": "base-clang-linux-x64",
+            "displayName": "Clang x64 Linux Release",
+            "description": "Build with all optimizations but include debug information.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "base-gcc-linux-x64",
+            "inherits": "base-linux-x64",
+            "environment": {
+                "CC": "gcc",
+                "CXX": "g++",
+                "CXXFLAGS": "-m64 --debug",
+                "CUDACXX": "nvcc",
+                "CUDAHOSTCXX": "g++",
+                "CUDAFLAGS": "--expt-relaxed-constexpr -lineinfo -Xcudafe --debug -DFMT_USE_FLOAT128=0",
+                "LDFLAGS": "-Wl,--exclude-libs=ALL"
+            },
+            "cacheVariables": {
+                "CMAKE_CUDA_STANDARD": "17"
+            },
+            "hidden": true
+        },
+        {
+            "name": "gcc-linux-x64-debug",
+            "inherits": "base-gcc-linux-x64",
+            "displayName": "GCC x64 Linux Debug",
+            "description": "Build without optimization, with debug information, and with debugging features.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_EXCEPTION_GUARDS": false,
+                "ENABLE_CUDA_KERNEL_SERIALIZATION": true
+            }
+        },
+        {
+            "name": "gcc-linux-x64-unopt",
+            "inherits": "base-gcc-linux-x64",
+            "displayName": "GCC x64 Linux Unoptimized",
+            "description": "Build without optimization, with debug information, and with debugging features.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_EXCEPTION_GUARDS": false,
+                "ENABLE_CUDA_KERNEL_SERIALIZATION": true,
+                "ENABLE_PYBIND11_OPTIMIZATIONS": false,
+                "CMAKE_CXX_FLAGS_RELEASE": "-O0"
+            }
+        },
+        {
+            "name": "gcc-linux-x64-release",
+            "inherits": "base-gcc-linux-x64",
+            "displayName": "GCC x64 Linux Release",
+            "description": "Build with all optimizations but include debug information.",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}

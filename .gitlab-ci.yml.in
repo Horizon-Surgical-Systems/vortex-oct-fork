@@ -1,0 +1,254 @@
+workflow:
+    rules:
+        - if: $CI_MERGE_REQUEST_IID
+        - if: $CI_COMMIT_BRANCH =~ /^(master|develop)$/
+        - if: $CI_COMMIT_TAG =~ /^v?[0-9]+[.][0-9]+([.][0-9]+)?$/
+        - if: $CI_PIPELINE_SOURCE == "web"
+
+stages: [sdist, bdist, test, doc, publish]
+
+variables:
+    GIT_CLONE_PATH: '$CI_BUILDS_DIR/$CI_JOB_ID'
+    FF_ENABLE_JOB_CLEANUP: 'true'
+
+.setup-windows:
+    tags:
+        - windows
+
+    variables:
+        OS: windows
+        # needed for both build and test
+        CUDAToolkit_ROOT: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$CUDA_VER_DOT
+        CUDA_PATH: $CUDAToolkit_ROOT
+
+    before_script:
+        # needed for build for CMake and test for CuPy
+        - $env:Path = "$env:Path;$CUDA_PATH\bin"
+        - Set-Alias -Name python -Value "C:\Program Files\Python$PY_VER\python.exe"
+        - python -V
+
+.setup-linux:
+    tags:
+        - linux
+
+    variables:
+        OS: linux
+
+    before_script:
+        - shopt -s expand_aliases
+        - alias python="/usr/local/python$PY_VER_DOT/bin/python$PY_VER_DOT"
+        - python -V
+
+.venv:
+    variables:
+        VENV: .ve
+
+    before_script:
+        - python -m venv $VENV
+
+.venv-windows:
+    extends:
+        - .setup-windows
+        - .venv
+
+    before_script:
+        - .ve\Scripts\Activate.ps1
+        - Set-Alias -Name python -Value "$VENV\Scripts\python.exe"
+
+.venv-linux:
+    extends:
+        - .setup-linux
+        - .venv
+
+    before_script:
+        - . $VENV/bin/activate
+        - alias python="$VENV/bin/python$PY_VER_DOT"
+
+.build:
+    variables:
+        GIT_DEPTH: '0' # need tags for release extraction
+        VERBOSE: '1'
+
+.build-windows:
+    stage: bdist
+
+    needs:
+        - build-sdist
+
+    extends:
+        - .setup-windows
+        - .build
+
+    tags:
+        - vs2022
+
+    variables:
+        VCPKG_MANIFEST_FEATURES: alazar;alazar-dac;teledyne;asio;backward;cuda;fftw;daqmx;imaq;hdf5;reflexxes
+
+    before_script:
+        - Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+        - Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools" -DevCmdArguments "-arch=x64"
+
+    script:
+        - python -m pip wheel (Get-Item dist/vortex*.tar.gz) -w dist -v
+
+    after_script:
+        - ls dist/vortex*
+
+    artifacts:
+        paths:
+            - dist/vortex*.whl
+
+.build-linux:
+    stage: bdist
+
+    needs:
+        - build-sdist
+
+    extends:
+        - .setup-linux
+        - .build
+
+    variables:
+        VCPKG_MANIFEST_FEATURES: alazar;alazar-dac;teledyne;asio;backward;cuda;fftw;daqmx;hdf5;reflexxes
+
+    script:
+        - python .gitlab-ci/build-linux-docker.py
+
+    after_script:
+        - ls -lhgo dist/vortex*
+
+    artifacts:
+        paths:
+            - dist/vortex*.whl
+
+build-sdist:
+    stage: sdist
+
+    extends:
+        - .setup-linux
+        - .build
+
+    tags:
+        - py312
+
+    variables:
+        VORTEX_NUMPY_REQUIREMENT: 'numpy'
+        VORTEX_BUILD_SUFFIX: ' '
+        PY_VER: '312'
+        PY_VER_DOT: '3.12'
+
+    script:
+        - python -m pip install build
+        - python -m build --sdist . -v
+
+    after_script:
+        - ls -lhgo dist/vortex*
+
+    artifacts:
+        paths:
+            - dist/vortex*.tar.gz
+
+.test:
+    stage: test
+
+    script:
+        - python -m pip install vortex-oct-cuda$CUDA_VER_X $TEST_PKGS -r test/requirements.txt -f dist
+        - python -m pytest -p no:faulthandler test/offline -v --junitxml=report-${OS}-py${PY_VER}-cuda${CUDA_VER_X}.xml
+
+    artifacts:
+        when: always
+        reports:
+            junit: report-*.xml
+
+.test-windows:
+    extends:
+        - .venv-windows
+        - .test
+
+    retry: 1
+
+.test-linux:
+    extends:
+        - .venv-linux
+        - .test
+
+build-doc:
+    extends:
+        - .build
+        - .venv-linux
+
+    tags:
+        - py312
+        - cuda126
+        - doxygen
+
+    stage: doc
+
+    variables:
+        CUDA_VER: '126'
+        CUDA_VER_DOT: '12.6'
+        CUDA_VER_X: 12x
+        PY_VER: '312'
+        PY_VER_DOT: '3.12'
+
+    needs:
+        - build-linux-py312-cuda12x
+
+    script:
+        - python -m pip install vortex-oct-cuda$CUDA_VER_X -r doc/requirements.txt -f dist
+        - python doc/build.py --output dist
+
+    after_script:
+        - ls -lhgo dist/vortex*
+
+    artifacts:
+        paths:
+            - dist/vortex*doc.zip
+
+.publish:
+    extends:
+        - .venv-linux
+
+    tags:
+        - py312
+
+    variables:
+        PY_VER: '312'
+        PY_VER_DOT: '3.12'
+
+    stage: publish
+
+    script:
+        - ls -lhgo dist/vortex*
+        - python -m pip install twine
+        - python -m twine upload --repository-url $REPOSITORY dist/vortex*.tar.gz dist/vortex*.whl
+
+publish-internal:
+    extends:
+        - .publish
+
+    variables:
+        TWINE_USERNAME: gitlab-ci-token
+        TWINE_PASSWORD: $CI_JOB_TOKEN
+        REPOSITORY: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
+
+    rules:
+        - if: $CI_COMMIT_BRANCH =~ /^(master|develop)$/
+        - if: $CI_COMMIT_TAG =~ /^v?[0-9]+[.][0-9]+([.][0-9]+)?$/
+        - if: $CI_PIPELINE_SOURCE == "web"
+          when: manual
+
+# publish-pypi:
+
+#     extends:
+#         - .publish
+
+#     variables:
+#         TWINE_USERNAME: $PYPI_USERNAME
+#         TWINE_PASSWORD: $PYPI_PASSWORD
+#         REPOSITORY: $PYPI_REPOSITORY
+
+#     rules:
+#         - if: $CI_COMMIT_TAG =~ /^v?[0-9]+[.][0-9]+([.][0-9]+)?$/
+#           when: manual

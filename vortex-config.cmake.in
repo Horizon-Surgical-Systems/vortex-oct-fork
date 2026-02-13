@@ -1,0 +1,94 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/vortex-targets.cmake")
+
+include(CMakeFindDependencyMacro)
+
+# temporarily add needed CMake find scripts
+# ref: https://discourse.cmake.org/t/exporting-packages-with-a-custom-find-module/3820
+set(_VORTEX_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
+# user options
+set(VORTEX_WITH_ASIO @WITH_ASIO@)
+set(VORTEX_WITH_BACKWARD @WITH_BACKWARD@)
+set(VORTEX_WITH_CUDA @WITH_CUDA@)
+set(VORTEX_WITH_REFLEXXES @WITH_REFLEXXES@)
+set(VORTEX_WITH_FFTW @WITH_FFTW@)
+set(VORTEX_WITH_HDF5 @WITH_HDF5@)
+set(VORTEX_WITH_PYTHON @WITH_PYTHON@)
+set(VORTEX_WITH_ALAZAR @WITH_ALAZAR@)
+set(VORTEX_WITH_ALAZAR_GPU @WITH_ALAZAR_GPU@)
+set(VORTEX_WITH_TELEDYNE @WITH_TELEDYNE@)
+set(VORTEX_WITH_DAQMX @WITH_DAQMX@)
+set(VORTEX_WITH_ALAZAR_DAC @WITH_ALAZAR_DAC@)
+set(VORTEX_WITH_IMAQ @WITH_IMAQ@)
+set(VORTEX_WITH_PYTHON @WITH_PYTHON@)
+
+# mandatory dependencies
+find_dependency(xtensor CONFIG)
+find_dependency(TBB CONFIG)
+find_dependency(fmt CONFIG)
+find_dependency(spdlog CONFIG)
+
+# optional dependencies
+
+if(VORTEX_WITH_ASIO)
+    find_dependency(asio CONFIG)
+endif()
+
+if(VORTEX_WITH_BACKWARD)
+    find_dependency(Backward CONFIG)
+endif()
+
+if(VORTEX_WITH_FFTW)
+    find_dependency(FFTW3 CONFIG)
+    find_dependency(FFTW3f CONFIG)
+    find_dependency(FFTW3l CONFIG)
+endif()
+
+if(VORTEX_WITH_REFLEXXES)
+    find_dependency(Reflexxes CONFIG)
+endif()
+
+if(VORTEX_WITH_CUDA)
+    find_dependency(CUDAToolkit)
+endif()
+
+if(VORTEX_WITH_HDF5)
+    find_dependency(hdf5 CONFIG)
+endif()
+
+if(VORTEX_WITH_DAQMX)
+    find_dependency(NIDAQmx)
+endif()
+
+if(VORTEX_WITH_IMAQ)
+    find_dependency(NIIMAQ)
+endif()
+
+if(VORTEX_WITH_ALAZAR OR WITH_ALAZAR_GPU)
+    if(VORTEX_WITH_ALAZAR_GPU)
+        # NOTE: ATS-GPU provides ATS-SDK too
+        find_dependency(ATSGPU)
+    else()
+        find_dependency(ATSSDK)
+    endif()
+endif()
+
+if(VORTEX_WITH_TELEDYNE)
+    find_dependency(ADQApi)
+endif()
+
+if(VORTEX_WITH_PYTHON)
+    find_dependency(Python3 COMPONENTS Interpreter NumPy)
+    find_dependency(pybind11 CONFIG)
+
+    find_dependency(xtensor CONFIG)
+    find_dependency(xtensor-python CONFIG)
+endif()
+
+check_required_components(vortex)
+
+set(CMAKE_MODULE_PATH ${_VORTEX_CMAKE_MODULE_PATH})
+unset(_VORTEX_CMAKE_MODULE_PATH)

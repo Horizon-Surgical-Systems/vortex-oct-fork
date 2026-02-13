@@ -1,0 +1,11 @@
+setuptools
+
+sphinx<9
+sphinx-copybutton
+sphinx-inline-tabs
+furo
+
+breathe
+
+matplotlib
+vortex-oct-tools

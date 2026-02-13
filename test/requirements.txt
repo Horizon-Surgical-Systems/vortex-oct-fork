@@ -1,0 +1,11 @@
+pytest
+
+vortex-oct-tools
+
+numpy
+scipy
+imageio
+
+# h5py # https://github.com/h5py/h5py/issues/2110
+nibabel
+pynrrd

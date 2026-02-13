@@ -1,0 +1,3 @@
+# include images for automated documentation builds
+!*.png
+!*.svg

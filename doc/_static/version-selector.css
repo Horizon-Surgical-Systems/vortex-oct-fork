@@ -1,0 +1,43 @@
+.version-selector {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: var(--color-sidebar-background);
+    border: none;
+}
+
+.version-message {
+    font-size: var(--admonition-title-font-size);
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin-top: 0;
+}
+
+.version-message > * {
+    flex-grow: 1;
+}
+
+.version-message::before,
+.version-message::after {
+    mask-repeat: no-repeat;
+    content: "";
+    height: 1rem;
+    width: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.version-develop::before,
+.version-develop::after {
+    background-color: var(--color-admonition-title--attention);
+    -webkit-mask-image: var(--icon-warning);
+    mask-image: var(--icon-warning);
+}
+
+.version-legacy::before,
+.version-legacy::after {
+    background-color: var(--color-admonition-title--seealso);
+    -webkit-mask-image: var(--icon-info);
+    mask-image: var(--icon-info);
+}

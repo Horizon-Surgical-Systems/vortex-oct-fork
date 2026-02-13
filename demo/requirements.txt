@@ -1,0 +1,5 @@
+numpy
+cupy-cuda12x # edit to use correct CUDA version
+qtpy
+matplotlib
+rainbow-logging-handler

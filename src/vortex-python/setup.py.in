@@ -1,0 +1,31 @@
+from pathlib import Path
+from setuptools import setup, Extension
+
+# borrow from main setup script
+import importlib.util
+spec = importlib.util.spec_from_file_location('root_setup', '@ROOT_SOURCE_DIR@/setup.py')
+root_setup = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(root_setup)
+
+class CMakePrebuilt(root_setup.CMakeBuild):
+    def build_extension(self, ext):
+        module_paths_cmake = '@MODULE_PATHS@'
+
+        # extension is already built
+        self.prepare_wheel(ext,
+            Path('@ROOT_BINARY_DIR@'),
+            [Path(p) for p in module_paths_cmake.split('|')] if module_paths_cmake else [],
+            root_setup.cmake_bool('@DEPLOY_DEPENDENCIES@'),
+            root_setup.cmake_bool('@DEPLOY_STUBS@'),
+            '@DEPLOY_PATH_RESTRICTION@'
+        )
+
+setup(
+    name='@PACKAGE_NAME@',
+    version='@EXTENSION_VERSION@',
+
+    **root_setup.package_properties,
+
+    cmdclass=dict(build_ext=CMakePrebuilt),
+    ext_modules=[root_setup.CMakeExtension('@EXTENSION_NAME@', '@ROOT_SOURCE_DIR@')],
+)

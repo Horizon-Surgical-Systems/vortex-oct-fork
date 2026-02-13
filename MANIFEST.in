@@ -1,0 +1,9 @@
+include CMakeLists.txt CMakePresets.json vcpkg.json vcpkg-configuration.json vortex-config.cmake.in VERSION LICENSE
+
+recursive-include cmake **
+recursive-include demo **
+recursive-include doc **
+recursive-include src **
+recursive-include test **
+
+global-exclude *.pyc

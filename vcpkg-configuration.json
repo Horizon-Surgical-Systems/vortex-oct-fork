@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg-configuration.schema.json",
+  "default-registry": {
+    "kind": "git",
+    "repository": "https://github.com/microsoft/vcpkg",
+    "baseline": "ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://gitlab.com/vortex-oct/vortex-registry",
+      "packages": [ "backward", "reflexxes", "vortex", "xtensor", "xtensor-python" ],
+      "baseline": "45af8e64ca825e9055acce2051bd1089144a3a89"
+    }
+  ]
+}

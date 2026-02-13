@@ -1,0 +1,2 @@
+string(REPLACE "|" "\n" CONTENTS "${CONTENTS}")
+file(WRITE ${TARGET} ${CONTENTS})
