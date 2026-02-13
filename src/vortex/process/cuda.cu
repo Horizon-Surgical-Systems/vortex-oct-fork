@@ -31,9 +31,9 @@ class strided_range
 {
 public:
 
-    typedef typename thrust::iterator_difference<Iterator>::type difference_type;
+    typedef typename cuda::thrust::iterator_difference<Iterator>::type difference_type;
 
-    struct stride_functor : public thrust::unary_function<difference_type, difference_type>
+    struct stride_functor : public cuda::thrust::unary_function<difference_type, difference_type>
     {
         difference_type stride;
 
@@ -48,9 +48,9 @@ public:
         }
     };
 
-    typedef typename thrust::counting_iterator<difference_type>                    CountingIterator;
-    typedef typename thrust::transform_iterator<stride_functor, CountingIterator>  TransformIterator;
-    typedef typename thrust::permutation_iterator<Iterator, TransformIterator>     PermutationIterator;
+    typedef typename cuda::thrust::counting_iterator<difference_type>                    CountingIterator;
+    typedef typename cuda::thrust::transform_iterator<stride_functor, CountingIterator>  TransformIterator;
+    typedef typename cuda::thrust::permutation_iterator<Iterator, TransformIterator>     PermutationIterator;
 
     // type of the strided_range iterator
     typedef PermutationIterator iterator;
@@ -137,11 +137,11 @@ namespace vortex {
                 size_t scratch_size;
                 cudaError_t error;
 
-                error = cub::DeviceReduce::ReduceByKey(
+                error = cuda::cub::DeviceReduce::ReduceByKey(
                     nullptr, scratch_size,
                     keys.ptr, reinterpret_cast<uint32_t*>(0),
                     reinterpret_cast<float*>(0), reinterpret_cast<float*>(0), reinterpret_cast<uint32_t*>(0),
-                    cub::Sum(),
+                    cuda::cub::Sum(),
                     keys.shape.x * keys.shape.y
                 );
                 cuda::detail::handle_error(error, "sum planning failed");
@@ -164,11 +164,11 @@ namespace vortex {
 #if defined(VORTEX_ENABLE_CUDA_DYNAMIC_RESAMPLING)
 
                 // NOTE: the number_of_runs parameter must be a device pointer
-                auto error = cub::DeviceReduce::ReduceByKey(
+                auto error = cuda::cub::DeviceReduce::ReduceByKey(
                     scratch_ptr, scratch_size,
                     keys.ptr, out_count.ptr,
                     in.ptr, out_sum.ptr, out_count.ptr,
-                    cub::Sum(),
+                    cuda::cub::Sum(),
                     in.shape.x * in.shape.y,
                     stream.handle()
                 );
@@ -274,10 +274,10 @@ namespace vortex {
 
                 // map phase to sample index
                 //strided_range<const float_t*> phase_record(phase.ptr + phase.offset(record_idx), phase.ptr + phase.offset(record_idx + 1), phase.stride.y);
-                //auto phase_before = thrust::lower_bound(thrust::seq, phase_record.begin(), phase_record.end(), phase_query);
+                //auto phase_before = cuda::thrust::lower_bound(cuda::thrust::seq, phase_record.begin(), phase_record.end(), phase_query);
                 auto phase_begin = phase.ptr + phase.offset(record_idx);
                 auto phase_end = phase_begin + phase.stride.x;
-                auto phase_before = thrust::lower_bound(thrust::seq, phase_begin, phase_end, phase_query);
+                auto phase_before = cuda::thrust::lower_bound(cuda::thrust::seq, phase_begin, phase_end, phase_query);
 
                 // calculate and clamp bounding sample indices
                 auto before_idx = phase_before - phase_begin;
@@ -1192,20 +1192,20 @@ namespace vortex {
                 std::array<size_t, 2> scratch_size;
                 cudaError_t error;
 
-                error = cub::DeviceScan::InclusiveScanByKey(
+                error = cuda::cub::DeviceScan::InclusiveScanByKey(
                     nullptr, scratch_size[0],
                     keys.ptr, reinterpret_cast<float*>(0),
                     reinterpret_cast<float*>(0),
-                    cub::Sum(),
+                    cuda::cub::Sum(),
                     keys.shape.x * keys.shape.y
                 );
                 cuda::detail::handle_error(error, "accumulate phase planning failed");
 
-                error = cub::DeviceReduce::ReduceByKey(
+                error = cuda::cub::DeviceReduce::ReduceByKey(
                     nullptr, scratch_size[1],
                     keys.ptr, reinterpret_cast<uint32_t*>(0),
                     reinterpret_cast<float*>(0), reinterpret_cast<float*>(0), reinterpret_cast<uint32_t*>(0),
-                    cub::Max(),
+                    cuda::cub::Max(),
                     keys.shape.x * keys.shape.y
                 );
                 cuda::detail::handle_error(error, "max phase planning failed");
@@ -1228,22 +1228,22 @@ namespace vortex {
 #if defined(VORTEX_ENABLE_CUDA_DYNAMIC_RESAMPLING)
                 cudaError_t error;
 
-                error = cub::DeviceScan::InclusiveScanByKey(
+                error = cuda::cub::DeviceScan::InclusiveScanByKey(
                     scratch_ptr, scratch_size,
                     keys.ptr, in.ptr, out_accum.ptr,
-                    cub::Sum(),
+                    cuda::cub::Sum(),
                     in.shape.x * in.shape.y,
-                    cub::Equality(),
+                    cuda::cub::Equality(),
                     stream.handle()
                 );
                 cuda::detail::handle_error(error, "accumulate records kernel(s) failed");
 
                 // NOTE: the number_of_runs parameter must be a device pointer
-                error = cub::DeviceReduce::ReduceByKey(
+                error = cuda::cub::DeviceReduce::ReduceByKey(
                     scratch_ptr, scratch_size,
                     keys.ptr, out_count.ptr,
                     out_accum.ptr, out_max.ptr, out_count.ptr,
-                    cub::Max(),
+                    cuda::cub::Max(),
                     in.shape.x * in.shape.y,
                     stream.handle()
                 );
