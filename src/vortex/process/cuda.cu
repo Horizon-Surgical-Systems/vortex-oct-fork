@@ -33,8 +33,11 @@ public:
 
     typedef typename cuda::thrust::iterator_difference<Iterator>::type difference_type;
 
-    struct stride_functor : public cuda::thrust::unary_function<difference_type, difference_type>
+    struct stride_functor
     {
+        using argument_type = difference_type;
+        using result_type = difference_type;
+
         difference_type stride;
 
         __host__ __device__

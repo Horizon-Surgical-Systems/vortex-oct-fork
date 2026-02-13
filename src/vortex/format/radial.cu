@@ -90,8 +90,8 @@ static void _radial_rectify(
         }
 
         // clamp indices that map straddle the bound
-        ridx_before = std::max<ptrdiff_t>(ridx_before, 0);
-        ridx_after = std::min<ptrdiff_t>(ridx_after, block.shape.x - 1);
+        ridx_before = max(ridx_before, ptrdiff_t(0));
+        ridx_after = min(ridx_after, ptrdiff_t(block.shape.x - 1));
         ratio = ridx - ridx_before;
 
         valid = true;

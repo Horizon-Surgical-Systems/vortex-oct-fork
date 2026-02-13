@@ -86,8 +86,8 @@ static void _spiral_rectify(
     }
 
     // clamp indices that map straddle the bound
-    sidx_before = std::max<ptrdiff_t>(sidx_before, 0);
-    sidx_after = std::min<ptrdiff_t>(sidx_after, block.shape.x - 1);
+    sidx_before = max(sidx_before, ptrdiff_t(0));
+    sidx_after = min(sidx_after, ptrdiff_t(block.shape.x - 1));
     auto ratio = sidx - sidx_before;
 
     // load this A-scan in the volume
